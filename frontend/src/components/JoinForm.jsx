@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { joinAPI } from '../services/api';
 
 const JoinForm = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const JoinForm = () => {
     reason: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -20,7 +22,7 @@ const JoinForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Frontend validation
@@ -29,29 +31,33 @@ const JoinForm = () => {
       return;
     }
 
-    // Store in localStorage (mock backend)
-    const submissions = JSON.parse(localStorage.getItem('clubSubmissions') || '[]');
-    submissions.push({
-      ...formData,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('clubSubmissions', JSON.stringify(submissions));
+    try {
+      setIsSubmitting(true);
+      
+      // Submit to backend
+      await joinAPI.submit(formData);
+      
+      setIsSubmitted(true);
+      toast.success('Application submitted successfully!');
 
-    setIsSubmitted(true);
-    toast.success('Application submitted successfully!');
-
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: '',
-        email: '',
-        year: '',
-        github: '',
-        linkedin: '',
-        reason: ''
-      });
-    }, 3000);
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          name: '',
+          email: '',
+          year: '',
+          github: '',
+          linkedin: '',
+          reason: ''
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,6 +94,7 @@ const JoinForm = () => {
                       className="w-full bg-black border border-white/40 text-white px-4 py-3 focus:outline-none focus:border-[#00FFD1] transition-colors"
                       placeholder="John Doe"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -100,6 +107,7 @@ const JoinForm = () => {
                       className="w-full bg-black border border-white/40 text-white px-4 py-3 focus:outline-none focus:border-[#00FFD1] transition-colors"
                       placeholder="john@example.com"
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -112,6 +120,7 @@ const JoinForm = () => {
                     onChange={handleChange}
                     className="w-full bg-black border border-white/40 text-white px-4 py-3 focus:outline-none focus:border-[#00FFD1] transition-colors"
                     required
+                    disabled={isSubmitting}
                   >
                     <option value="">Select your year</option>
                     <option value="1st Year">1st Year</option>
@@ -132,6 +141,7 @@ const JoinForm = () => {
                       onChange={handleChange}
                       className="w-full bg-black border border-white/40 text-white px-4 py-3 focus:outline-none focus:border-[#00FFD1] transition-colors"
                       placeholder="https://github.com/username"
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -143,6 +153,7 @@ const JoinForm = () => {
                       onChange={handleChange}
                       className="w-full bg-black border border-white/40 text-white px-4 py-3 focus:outline-none focus:border-[#00FFD1] transition-colors"
                       placeholder="https://linkedin.com/in/username"
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -156,14 +167,16 @@ const JoinForm = () => {
                     rows={4}
                     className="w-full bg-black border border-white/40 text-white px-4 py-3 focus:outline-none focus:border-[#00FFD1] transition-colors resize-none"
                     placeholder="Tell us about your interest in joining..."
+                    disabled={isSubmitting}
                   ></textarea>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-[#00FFD1] text-black px-8 py-4 font-medium text-lg hover:bg-[#00FFD1]/10 hover:text-[#00FFD1] transition-all flex items-center justify-center gap-3 min-h-14"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#00FFD1] text-black px-8 py-4 font-medium text-lg hover:bg-[#00FFD1]/10 hover:text-[#00FFD1] transition-all flex items-center justify-center gap-3 min-h-14 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Application
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
                   <Send size={20} />
                 </button>
               </form>

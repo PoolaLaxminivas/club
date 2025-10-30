@@ -1,8 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Github, ExternalLink } from 'lucide-react';
-import { projects } from '../mock';
+import { projectsAPI } from '../services/api';
 
 const Projects = () => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const response = await projectsAPI.getAll();
+        setProjects(response.data);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Failed to load projects. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
   const getStatusColor = (status) => {
     switch(status) {
       case 'active': return 'bg-[#00FFD1] text-black';
@@ -10,6 +31,30 @@ const Projects = () => {
       default: return 'bg-white/20 text-white';
     }
   };
+
+  if (loading) {
+    return (
+      <section id="projects" className="relative bg-black py-24 md:py-32">
+        <div className="max-w-screen-2xl mx-auto px-[7.6923%]">
+          <div className="text-center">
+            <div className="text-[#00FFD1] text-xl animate-pulse">Loading projects...</div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="projects" className="relative bg-black py-24 md:py-32">
+        <div className="max-w-screen-2xl mx-auto px-[7.6923%]">
+          <div className="text-center">
+            <div className="text-red-500 text-xl">{error}</div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="projects" className="relative bg-black py-24 md:py-32">
