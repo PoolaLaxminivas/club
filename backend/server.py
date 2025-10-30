@@ -5,10 +5,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
-from datetime import datetime, timezone
+
+# Import routes
+from routes.members import router as members_router
+from routes.events import router as events_router
+from routes.projects import router as projects_router
+from routes.join import router as join_router
 
 
 ROOT_DIR = Path(__file__).parent
